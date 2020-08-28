@@ -1,0 +1,92 @@
+@font-face {
+  font-family: "ABCSans Regular";
+  font-style: normal;
+  font-weight: normal;
+  src: local("ABCSans Regular"), url("./abcsans-regular.woff") format("woff");
+}
+@font-face {
+  font-family: "ABCSans Black";
+  font-style: normal;
+  font-weight: normal;
+  src: local("ABCSans Black"), url("./abcsans-black.woff") format("woff");
+}
+:root {
+  font-size: 1em;
+  font-family: "ABCSans Regular", "Arial", sans-serif;
+  color: #1C1C1C;
+}
+body {
+  margin: 0;
+  padding: 0;
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  opacity: 0;
+}
+#map, #svg {
+  position: fixed;
+  width: 100%;
+  height:100%;
+}
+.suburb {
+  stroke: #1C1C1C;
+}
+.suburb:hover {
+  stroke: #FFB300;
+  stroke-width: 2;
+}
+#selector {
+  position: fixed;
+  display: flex;
+  margin: 10px;
+}
+.choice {
+  background-color: #1C1C1C;
+  color: white;
+  font-weight: bold;
+  padding: 5px;
+  box-shadow: 1px 1px 4px #1C1C1C;
+  width: 70px;
+  text-align: center;
+  border: solid 1px white;
+}
+.choice:last-child {
+  margin-left: 5px;
+}
+.choice.selected {
+  background-color: #009CBF;
+}
+.choice:hover {
+  background-color: #F75F00;
+}
+#footer {
+  position: fixed;
+  bottom: 0;
+  opacity: 0;
+}
+#tip {
+  position: absolute;
+  opacity: 0;
+  padding: 5px;
+  border-radius: 5px;
+  background-color: rgba(28, 28, 28, .75);
+  pointer-events: none;
+  color: white;
+}
+h1 {
+  margin: 0;
+  font-size: 1rem;
+  font-family: "ABCSans Black", "Arial Black", sans-serif;
+}
+p {
+  margin: 0;
+  font-size: .8rem;
+  font-family: "ABCSans Light", "Arial Narrow", sans-serif;
+}
+span {
+  font-family: "ABCSans Regular", "Arial", sans-serif;
+  font-weight: bold;
+  color: #FFB300;
+}
