@@ -29,12 +29,21 @@
       <div id="houses" class="choice selected" onclick="changeSelection('houses')">HOUSES</div>
       <div id="units" class="choice" onclick="changeSelection('units')">UNITS</div>
     </div>
-    <div id="footer"></div>
+    <svg id="legend">
+      <defs>
+        <linearGradient id="gradient" x1="0%" x2="100%" y1="0%" y2="0%"></linearGradient>
+      </defs>
+      <rect height=25 x=10 y=30></rect>
+      <g id="axisGroup" transform="translate(0, 55)">
+        <text y=-30 id="axisLabel">average annual rates increase</text>
+      </g>
+    </svg>
     <div id="tip"></div>
     <script>
       // load data
       d3.json("./resources/actRates.topojson", function(error, data) {
         if (error) throw error;
+        // format data
         ratesData = topojson.feature(data, data.objects.suburbs);
         bounds = d3.geoBounds(ratesData);
         // set up MapBox engine
@@ -59,7 +68,7 @@
         map.on("load", function() {
           map.addControl(new mapboxgl.AttributionControl({
               compact: true,
-              customAttribution: "ACT Government <a href='https://creativecommons.org/licenses/by/4.0/'>(CC BY 4.0)</a>"
+              customAttribution: "ACT Revenue Office <a href='https://creativecommons.org/licenses/by/4.0/'>(CC BY 4.0)</a>"
             }))
             .addControl(new mapboxgl.NavigationControl({
               showCompass: false
@@ -74,6 +83,9 @@
             .append("g")
               .attr("id", "svgGroup");
           tip = d3.select("#tip");
+          legend = d3.select("#legend");
+          axisGroup = d3.select("#axisGroup");
+          axisLabel = d3.select("#axisLabel");
           // map calculations
           projection = calcProjection();
           path = d3.geoPath();
@@ -81,6 +93,14 @@
           colours = d3.scaleLinear()
             .range([d3.hsl(blue.h, 1, .95), d3.hsl(blue.h, 1, .05)])
             .interpolate(d3.interpolateHsl);
+          // legend
+          margin = { top: 15, bottom: 90, left: 15, right: 15 };
+          d3.select("#gradient")
+            .selectAll("stop")
+              .data(d3.range(11))
+            .enter().append("stop")
+              .attr("offset", function(d) { return d * 10 + "%"; })
+              .attr("style", function(d) { return "stop-color: " + colours(d/10) + "; stop-opacity: 1;"; });
           // set up SVGs
           type = "houses";
           fillSuburbs();
@@ -94,7 +114,6 @@
               .duration(1000)
               .style("opacity", 1);
           d3.timeout(function() {
-            margin = { top: 16, bottom: 16, left: 16, right: 16 };
             map.fitBounds(d3.geoBounds(ratesData), {
               padding: margin,
               duration: 4000
@@ -109,6 +128,11 @@
         // draw SVGs
         d3.selectAll(".suburb")
           .attr("d", path);
+        mouseout();
+        // legend
+        legend.select("rect")
+          .attr("width", width - 20);
+        axisLabel.attr("x", margin.left + (width - margin.left - margin.right) / 2);
       }
       // recalculates D3 map projection when map moves
       function calcProjection() {
@@ -146,7 +170,7 @@
             return e.type == type.slice(0, -1);
           })[0];
           d.properties.current = data.end;
-          d.properties.change = data.end / data.start;
+          d.properties.change = Math.pow(data.end / data.start, 1 / 9) - 1;
           return d;
         });
         colours.domain(d3.extent(activeData, function(d) { return d.properties.change; }));
@@ -162,6 +186,14 @@
             .on("mouseover", mouseover)
             .on("mouseout", mouseout);
         suburbs.style("fill", function(d) { return colours(d.properties.change); });
+        x = d3.scaleLinear()
+          .domain(colours.domain())
+          .range([10, width - 10]);
+        axis = d3.axisBottom(x)
+          .ticks(5, ".0%")
+          .tickSizeOuter(0);
+        axisGroup.transition()
+          .call(axis);
         render();
       }
 
@@ -176,23 +208,23 @@
           .style("left", "0px")
           .html("<h1>" + d.properties.suburb + "</h1>"
               + "<p>average rates this year: <span>" + d3.format("$,.0f")(d.properties.current) + "</span></p>"
-              + "<p>increase over nine years: <span>" + d3.format(".0%")(d.properties.change - 1) + "</span></p>");
+              + "<p>average annual increase (since 2011-12): <span>" + d3.format(".1%")(d.properties.change) + "</span></p>");
         // set location of tool tip to ensure it's always inside chart
         let tipWidth = parseFloat(tip.style("width"));
         let tipHeight = parseFloat(tip.style("height"));
         tip.style("top", function() {
-          return centroid[1] + tipHeight + 32 > height ?
-          (centroid[1] - tipHeight - 32) + "px":
-          (centroid[1] + 16) + "px";
-        })
-        .style("left", function() {
-          return centroid[0] + (tipWidth / 2) + 16 > width ?
-          (width - tipWidth - 16) + "px" :
-          centroid[0] - (tipWidth / 2) - 16 < 0 ?
-          "16px" :
-          (centroid[0] - (tipWidth / 2)) + "px";
-        })
-        .style("opacity", 1);
+            return centroid[1] + tipHeight + 32 > height ?
+            (centroid[1] - tipHeight - 32) + "px":
+            (centroid[1] + 16) + "px";
+          })
+          .style("left", function() {
+            return centroid[0] + (tipWidth / 2) + 16 > width ?
+            (width - tipWidth - 16) + "px" :
+            centroid[0] - (tipWidth / 2) - 16 < 0 ?
+            "16px" :
+            (centroid[0] - (tipWidth / 2)) + "px";
+          })
+          .style("opacity", 1);
       }
 
       // de-activate selection
